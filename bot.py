@@ -1,6 +1,5 @@
 import logging
-import threading
-from flask import Flask
+from flask import Flask, request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import gspread
@@ -71,8 +70,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "المغرب: 21276132676\n"
             "الأردن: 962780144811\n"
             "السعودية: 966576064723\n\n"
-            "🔹 ملاحظة مهمة:\n"
-            "إذا لم تقومي بكتابة رمز الدولة في الاستمارة، يُرجى إدخال الرقم تمامًا كما كتبتيه أثناء التسجيل، أو تجربة البريد الإلكتروني بدلًا من ذلك.\n\n"
             "🔁 يُرجى المحاولة أكثر من مرة، وفي حال لم يتم العثور على البيانات، يُرجى الرجوع إلى تعليمات الإدارة المرفقة مع منشور الرقم الأكاديمي على قناة الطالبات.\n"
             "📌 هذا البوت ردّه آلي ولا يستقبل الاستفسارات.\n\n"
             "مع أطيب الأمنيات بالتوفيق 🌷"
@@ -130,18 +127,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown'
         )
 
-def run_bot():
-    logging.basicConfig(level=logging.INFO)
-    app_telegram = ApplicationBuilder().token(TOKEN).build()
-    app_telegram.add_handler(CommandHandler("start", start))
-    app_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("Bot is running...")
-    app_telegram.run_polling()
+# إعداد تطبيق التيليجرام
+application = ApplicationBuilder().token(TOKEN).build()
+application.add_handler(CommandHandler("start", start))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+@app.route(f'/{TOKEN}', methods=['POST'])
+def webhook():
+    if request.method == "POST":
+        update = Update.de_json(request.get_json(force=True), application.bot)
+        application.update_queue.put(update)
+        return 'OK', 200
 
 @app.route('/')
-def home():
+def index():
     return "البوت يعمل بنجاح 🎉"
 
 if __name__ == '__main__':
-    threading.Thread(target=run_bot).start()
+    application.bot.set_webhook(url="https://academic-bot.onrender.com/" + TOKEN)
     app.run(host='0.0.0.0', port=8080)
