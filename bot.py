@@ -106,7 +106,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown'
         )
 
-# إنشاء تطبيق التيليجرام
 application = ApplicationBuilder().token(TOKEN).build()
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
@@ -121,11 +120,12 @@ async def webhook():
 def index():
     return "البوت يعمل بنجاح 🎉"
 
-async def main():
-    await application.initialize()
-    await application.bot.set_webhook(url=f"https://academic-bot.onrender.com/{TOKEN}")
-    # في بيئة Render، عادة نستخدم production server مثل gunicorn لكن للاختبار فقط نستخدم Flask:
-    app.run(host='0.0.0.0', port=8080)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    import uvicorn
+    async def startup():
+        await application.initialize()
+        await application.bot.set_webhook(url=f"https://academic-bot.onrender.com/{TOKEN}")
+
+    # شغّل الويب هوك مع uvicorn (خادم ASGI يدعم asyncio)
+    uvicorn.run(app, host='0.0.0.0', port=8080, lifespan='on', startup=startup)
