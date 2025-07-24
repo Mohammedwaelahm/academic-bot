@@ -1,15 +1,17 @@
 import logging
-import asyncio
-from flask import Flask, request
+from fastapi import FastAPI, Request
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import gspread
 from google.oauth2.service_account import Credentials
+import asyncio
+import os
 
-app = Flask(__name__)
+app = FastAPI()
 
 SHEET_ID = "1yJfHYX7VpBF1d0bY5XMNqb3L15J6mPk79UrXLPYmSwY"
 SHEET_NAME = "Sheet1"
+TOKEN = os.getenv("BOT_TOKEN", "8198733355:AAF4vAs0PPKlS3SqmSHee_efrlYT7Wt2yRk")
 
 scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
@@ -21,7 +23,6 @@ headers = all_values[0]
 data_rows = all_values[1:]
 
 user_states = {}
-TOKEN = "8198733355:AAF4vAs0PPKlS3SqmSHee_efrlYT7Wt2yRk"
 
 def strip_international_prefix(phone):
     phone = phone.strip()
@@ -110,22 +111,18 @@ application = ApplicationBuilder().token(TOKEN).build()
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-@app.route(f'/{TOKEN}', methods=['POST'])
-async def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
+@app.post(f"/{TOKEN}")
+async def receive_update(request: Request):
+    update_data = await request.json()
+    update = Update.de_json(update_data, application.bot)
     await application.process_update(update)
-    return "OK", 200
+    return {"ok": True}
 
-@app.route('/')
-def index():
-    return "البوت يعمل بنجاح 🎉"
+@app.get("/")
+def root():
+    return {"message": "البوت يعمل بنجاح 🎉"}
 
-
-if __name__ == '__main__':
-    import uvicorn
-    async def startup():
-        await application.initialize()
-        await application.bot.set_webhook(url=f"https://academic-bot.onrender.com/{TOKEN}")
-
-    # شغّل الويب هوك مع uvicorn (خادم ASGI يدعم asyncio)
-    uvicorn.run(app, host='0.0.0.0', port=8080, lifespan='on', startup=startup)
+@app.on_event("startup")
+async def on_startup():
+    await application.initialize()
+    await application.bot.set_webhook(f"https://academic-bot.onrender.com/{TOKEN}")
