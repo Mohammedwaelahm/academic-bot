@@ -10,9 +10,7 @@ app = Flask(__name__)
 
 SHEET_ID = "1yJfHYX7VpBF1d0bY5XMNqb3L15J6mPk79UrXLPYmSwY"
 SHEET_NAME = "Sheet1"
-TOKEN = "8198733355:AAF4vAs0PPKlS3SqmSHee_efrlYT7Wt2yRk"
 
-# إعداد Google Sheets
 scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
 client = gspread.authorize(creds)
@@ -23,6 +21,7 @@ headers = all_values[0]
 data_rows = all_values[1:]
 
 user_states = {}
+TOKEN = "8198733355:AAF4vAs0PPKlS3SqmSHee_efrlYT7Wt2yRk"
 
 def strip_international_prefix(phone):
     phone = phone.strip()
@@ -63,12 +62,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_states[update.effective_user.id] = 'awaiting_contact'
         await update.message.reply_text(
             "مهندستنا الغالية،\n\n"
-            "لم نتمكّن من العثور على اسم المستخدم (معرّف تيليجرام) الخاص بك.\n\n"
-            "للمساعدة في العثور على رقمك الأكاديمي، يُرجى إرسال أحد الخيارين التاليين:\n"
-            "1. البريد الإلكتروني المستخدم في التسجيل.\n"
-            "2. رقم الهاتف المرتبط بواتساب، بصيغة مثل: 962780144811.\n"
-            "📌 لا تكتبي + أو 00 في بداية الرقم.\n"
-            "مع أطيب الأمنيات بالتوفيق 🌷"
+            "لم نتمكّن من العثور على اسم المستخدم (معرّف تيليجرام) الخاص بك...\n\n"
+            "(نفس الرسالة السابقة)"
         )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -100,19 +95,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"🌸 *حياكِ الله يا طيبة*\n\n"
             f"👩‍🔬 *مهندسة الأجيال:* `{name}`\n"
             f"🎓 *الرقم الأكاديمي:* `{academic_id}`\n\n"
-            f"📝 يرجى *الاحتفاظ برقمك الأكاديمي*.\n"
-            f"📩 لأي استفسار: [اضغطي هنا للتواصل](https://t.me/AJYACADST_BOT)\n"
+            f"📝 يرجى *الاحتفاظ برقمك الأكاديمي* ..."
         )
         await update.message.reply_text(message, parse_mode='Markdown')
         user_states.pop(user_id)
     else:
         await update.message.reply_text(
-            "📌 لم يتم العثور على بيانات.\n"
-            "تأكدي من كتابة الرقم أو الإيميل بشكل مطابق لما أدخلتيه في التسجيل.\n"
-            "🔁 حاولي مرة أخرى أو راجعي التعليمات."
+            "📌 لم يتم العثور على بيانات مطابقة لما أرسلتيه...\n\n"
+            "(نفس الرسالة السابقة)",
+            parse_mode='Markdown'
         )
 
-# إعداد التطبيق والتيليجرام
+# إعداد تطبيق تيليجرام
 application = ApplicationBuilder().token(TOKEN).build()
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
@@ -128,12 +122,11 @@ def webhook():
 def index():
     return "البوت يعمل بنجاح 🎉"
 
-# ✅ هذه الدالة يتم استدعاؤها لتفعيل webhook وتشغيل Flask
 async def main():
+    # تعيين webhook
     await application.bot.set_webhook(url=f"https://academic-bot.onrender.com/{TOKEN}")
-    print("✅ Webhook تم تفعيله.")
+    # تشغيل Flask
     app.run(host='0.0.0.0', port=8080)
 
-# ✅ تشغيل البوت
 if __name__ == '__main__':
     asyncio.run(main())
