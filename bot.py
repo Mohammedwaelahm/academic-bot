@@ -18,7 +18,7 @@ headers = all_values[0]
 data_rows = all_values[1:]
 
 user_states = {}
-TOKEN = "8020773258:AAHY88ZtYg816ktYkx-DWPPT8cImzivfWEg"
+TOKEN = "8198733355:AAF4vAs0PPKlS3SqmSHee_efrlYT7Wt2yRk"
 
 def strip_international_prefix(phone):
     phone = phone.strip()
