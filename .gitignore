@@ -1,0 +1,15 @@
+# تجاهل بيانات الاعتماد
+credentials.json
+
+# تجاهل ملفات Python bytecode
+__pycache__/
+*.py[cod]
+
+# تجاهل ملفات بيئة العمل
+.env
+venv/
+env/
+
+# تجاهل ملفات النظام
+.DS_Store
+Thumbs.db
