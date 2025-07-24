@@ -1,8 +1,12 @@
 import logging
+import threading
+from flask import Flask
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import gspread
 from google.oauth2.service_account import Credentials
+
+app = Flask(__name__)
 
 SHEET_ID = "1yJfHYX7VpBF1d0bY5XMNqb3L15J6mPk79UrXLPYmSwY"
 SHEET_NAME = "Sheet1"
@@ -12,7 +16,6 @@ creds = Credentials.from_service_account_file("credentials.json", scopes=scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
-# الآن نقرأ كل القيم كقائمة قوائم
 all_values = sheet.get_all_values()
 headers = all_values[0]
 data_rows = all_values[1:]
@@ -41,8 +44,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     if matched:
-        name = matched[0]  # العمود A
-        academic_id = matched[4]  # العمود E
+        name = matched[0]
+        academic_id = matched[4]
 
         message = (
             f"🌸 *حياكِ الله يا طيبة*\n\n"
@@ -98,7 +101,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         tg_username = update.effective_user.username
         if tg_username:
-            sheet.update_cell(row_index, 6, f"@{tg_username}")  # عمود F
+            sheet.update_cell(row_index, 6, f"@{tg_username}")
 
         message = (
             f"🌸 *حياكِ الله يا طيبة*\n\n"
@@ -127,15 +130,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode='Markdown'
         )
 
-def main():
+def run_bot():
     logging.basicConfig(level=logging.INFO)
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
+    app_telegram = ApplicationBuilder().token(TOKEN).build()
+    app_telegram.add_handler(CommandHandler("start", start))
+    app_telegram.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("Bot is running...")
-    app.run_polling()
+    app_telegram.run_polling()
 
-if __name__ == "__main__":
-    main()
+@app.route('/')
+def home():
+    return "البوت يعمل بنجاح 🎉"
+
+if __name__ == '__main__':
+    threading.Thread(target=run_bot).start()
+    app.run(host='0.0.0.0', port=8080)
