@@ -125,4 +125,4 @@ def root():
 @app.on_event("startup")
 async def on_startup():
     await application.initialize()
-    await application.bot.set_webhook(f"https://academic-bot.onrender.com/{TOKEN}")
+    await application.bot.set_webhook(f"https://academic-bot.onrender.com/8198733355:AAF4vAs0PPKlS3SqmSHee_efrlYT7Wt2yRk")
